@@ -1,0 +1,504 @@
+
+
+
+
+RADEXT Working Group                                       S. Gundavelli
+Internet-Draft                                             Cisco Systems
+Intended status: Standards Track                                  S. Das
+Expires: 14 April 2025                                      Peraton Labs
+                                                              M. Grayson
+                                                           Cisco Systems
+                                                         11 October 2024
+
+
+   RADIUS attributes for National Security and Emergency Preparedness
+                                Service
+                      draft-gundavelli-radepcs-00
+
+Abstract
+
+   This document describes RADIUS attributes for supporting
+   authorization of Emergency Preparedness Communication Service (EPCS),
+   enabling users to benefit from access to Wi-Fi based Multimedia
+   Priority Services Communications.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 14 April 2025.
+
+Copyright Notice
+
+   Copyright (c) 2024 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+
+
+
+
+
+
+
+
+
+Gundavelli, et al.        Expires 14 April 2025                 [Page 1]
+
+Internet-Draft                 RADIUS EPCS                  October 2024
+
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
+     1.1.  Requirements Language . . . . . . . . . . . . . . . . . .   3
+     1.2.  Terminology . . . . . . . . . . . . . . . . . . . . . . .   3
+   2.  Overiew of EPCS Provisioning  . . . . . . . . . . . . . . . .   4
+   3.  EPCS Authorization RADIUS Exchange  . . . . . . . . . . . . .   5
+   4.  RADIUS EPCS Attributes  . . . . . . . . . . . . . . . . . . .   5
+     4.1.  EPCS-Capable-Indication . . . . . . . . . . . . . . . . .   5
+     4.2.  EPCS-Subscription-Info  . . . . . . . . . . . . . . . . .   6
+   5.  Security Considerations . . . . . . . . . . . . . . . . . . .   7
+   6.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   7
+   7.  References  . . . . . . . . . . . . . . . . . . . . . . . . .   7
+     7.1.  Normative References  . . . . . . . . . . . . . . . . . .   7
+     7.2.  Informative References  . . . . . . . . . . . . . . . . .   8
+   Acknowledgements  . . . . . . . . . . . . . . . . . . . . . . . .   8
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .   8
+
+1.  Introduction
+
+   National Security/Emergency Preparedness priority communications
+   services are operational in various countries around the world.
+   While these have traditionally been only supported over cellular
+   networks, the recent addition of Emergency Preparedness Communication
+   Service (EPCS) to Wi-Fi 7 means that Wi-Fi now supports Multimedia
+   Priority Services Communications (MPS).  This specifies preferred or
+   prioritized channel access (PCA) over public/private Wi-Fi networks
+   in emergency service (ES) scenarios.
+
+   Whereas Wi-Fi 7 defines the interactions between the Wi-Fi Access
+   Point (AP) and the Wi-Fi Station device for prioritized channel
+   access, it does not provide an end-to-end architecture for enabling
+   the EPCS on a per device basis.
+
+
+
+
+
+
+
+
+
+Gundavelli, et al.        Expires 14 April 2025                 [Page 2]
+
+Internet-Draft                 RADIUS EPCS                  October 2024
+
+
+   CISRCVIII WG4 recommendations for FCC provide opportunities for
+   regulatory bodies, like the FCC, to assess and promote Wi-Fi's role
+   in emergency services [CSRC8-WG4].  This involves shaping rules,
+   clarifying obligations, and exploring methods for handling Wi-Fi-
+   enabled 911 calls, ultimately enhancing Wi-Fi's role in critical
+   communications.
+
+   Earlier deliverables from CISRCV WG8 have defined requirements for
+   the role of the network within the priority services platform to
+   enforce priority levels on traffic associated with priority users
+   [CSRC5-WG8].  There are number of factors critical to this
+   enforcement function:
+
+   *  The priority user must be authenticated and authorized to receive
+      priority treatment
+
+   *  The network must be able to uniquely identify priority user
+      traffic and associate the authorized level of priority to that
+      traffic
+
+   *  The network must then have prioritization means to apply to the
+      identified traffic.
+
+   *  For cases where networks interconnect, traffic prioritization
+      indicators must be securely passed to interconnected networks for
+      downstream prioritization.
+
+   This document specifies an extension to the Remote Authentication
+   Dial-In User Service (RADIUS) protocol [RFC2865] that enables a Wi-Fi
+   NAS to indicate it is EPCS capable, as well as enabling a RADIUS
+   server to indicate to a NAS that an authenticated user is authorized
+   to receive the EPCS service.
+
+1.1.  Requirements Language
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in BCP
+   14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+1.2.  Terminology
+
+   Authorizing agent:
+
+   Refers to a Federal or State entity that authenticates, evaluates,
+   and makes recommendations to DHS regarding the assignment of priority
+   levels.
+
+
+
+Gundavelli, et al.        Expires 14 April 2025                 [Page 3]
+
+Internet-Draft                 RADIUS EPCS                  October 2024
+
+
+   Service user:
+
+   Mmeans an individual or organization to whom or which a priority
+   access assignment has been made.
+
+   Wireless service provider:
+
+   Refers to a provider of a wireless communications service or Internet
+   Protocol-based service, including commercial or private mobile
+   service.  The term includes agents of the licensed provider and
+   resellers of wireless service.
+
+2.  Overiew of EPCS Provisioning
+
+   This section provides background on how EPCS service is currently
+   authorized and how that can be adapted to support Wi-Fi use cases.
+   The service user engages with an authorizing agent to request the
+   provision of priority service on a service provider device.  The
+   service provider, in this case a cellular operator, will receive an
+   indication from the authorizing agent that a subscriber has been
+   authorized for priority services and will stored such an indication
+   in the Home Subscriber Server (HSS).
+
+   In the case that the cellular operator is also operating as a Wi-Fi
+   Ideneity Provider, the operator can mirror the authorization
+   information in their Wi-Fi AAA system, as illustrated in Figure 1.
+
+   +---------+    +------------+    +--------------+    +-----------+
+   |  Wi-Fi  |    |EPCS Enabled|    |   Cellular   |    | Priority  |
+   |Priority |    |Wi-Fi Access|    |Operator/Wi-Fi|    |  Service  |
+   | Service |    |  Network   |    |   Identity   |    |Authorizing|
+   |  User   |    |            |    |   Provider   |    |  Entity   |
+   +---------+    +------------+    +--------------+    +-----------+
+        |               |                   |                 |
+        |1. Standard service user authorization for priority  |
+        |   Service (unchanged)             |                 |
+        |<===================================================>|
+        |               |                   |                 |
+        |               |                   |2. Receive Priority
+        |               |                   |   Authorization |
+        |               | 3. Mirror HSS     |   (unchanged)   |
+        |               |    Authorization  |<===============>|
+        |               |    in Wi-Fi AAA   |                 |
+        |               |         //========|                 |
+        |               |         ||        |                 |
+        |               |         \\=======>|                 |
+        |               |                   |                 |
+        |               |                   |                 |
+
+
+
+Gundavelli, et al.        Expires 14 April 2025                 [Page 4]
+
+Internet-Draft                 RADIUS EPCS                  October 2024
+
+
+            Figure 1: Provisioning Priority Services over Wi-fi
+
+3.  EPCS Authorization RADIUS Exchange
+
+   The top level RADIUS Authorization flows for an EPCS Service User is
+   illustrated in Figure 2.
+
+   +---------+    +------------+    +--------------+    +-----------+
+   |  Wi-Fi  |    |EPCS Enabled|    |   Cellular   |    | Priority  |
+   |Priority |    |Wi-Fi Access|    |Operator/Wi-Fi|    |  Service  |
+   | Service |    |  Network   |    |   Identity   |    |Authorizing|
+   |  User   |    |            |    |   Provider   |    |  Entity   |
+   +---------+    +------------+    +--------------+    +-----------+
+        |               |                   |                 |
+        |1. EAP-Identity/                   |                 |
+        |   Request     |                   |                 |
+        |<==============|                   |                 |
+        |2. EAP-Identity/                   |                 |
+        |   Response    |                   |                 |
+        |==============>|3. RADIUS Access-Request             |
+        |               |   EPCS-Capable-Indication           |
+        |               |==================>|                 |
+        |               |                   |                 |
+        |       4. EAP Dialogue             |                 |
+        |<=================================>|5. Match user with
+        |               |                   |   priority      |
+        |               |                   |   subscription  |
+        |               |                   |======\          |
+        |               |                   |      ||         |
+        |               |                   |<=====/          |
+        |               |6. RADIUS Access-Accept              |
+        |               |   EPCS-Subscription-Info            |
+        |               |<==================|                 |
+        |7. EAP-SUCCESS |                   |                 |
+        |<==============|                   |                 |
+        |               |                   |                 |
+
+             Figure 2: Authorizing Priority Services over Wi-fi
+
+4.  RADIUS EPCS Attributes
+
+4.1.  EPCS-Capable-Indication
+
+   Description
+
+   The EPCS-Capable-Indication (TBA1) Attribute allows a RADIUS NAS to
+   indicate to a RADIUS server that it is EPCS capable.
+
+
+
+
+Gundavelli, et al.        Expires 14 April 2025                 [Page 5]
+
+Internet-Draft                 RADIUS EPCS                  October 2024
+
+
+   One EPCS-Capable-Indication Attribute MAY be included in an Access-
+   Request packet.
+
+   A summary of the EPCS-Capable-Indication Attribute format is shown in
+   Figure 3.  The fields are transmitted from left to right.
+
+   0                   1                   2                   3
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Type      |  Length       |           Value               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+            Figure 3: Encoding EPCS-Capable-Indication Attribute
+
+   Type
+
+      TBA1
+
+   Length
+
+      6 octet
+
+   Data Type
+
+      Integer
+
+   Value
+
+      The field is 2 octets, containing a 16-bit unsigned integer that
+      represents whether the NAS supports EPCS and how the EPCS service
+      can be invoked.  This document defines three values used with the
+      EPCS-Capable-Indication attribute:
+
+      0     The NAS does not support EPCS.
+
+      1     The provider of the NAS has elected to provide support
+            for priority services to authorized users at all times
+            [FCC].
+
+      2     The provider of the NAS has elected to provide support
+            for priority services on a per EPCS-flow basis.
+
+4.2.  EPCS-Subscription-Info
+
+   Description
+
+
+
+
+
+
+Gundavelli, et al.        Expires 14 April 2025                 [Page 6]
+
+Internet-Draft                 RADIUS EPCS                  October 2024
+
+
+   The EPCS-Subscription-Info (TBA2) Attribute allows a RADIUS Server to
+   indicate to a NAS that a user is authorized to receive priority
+   servie.
+
+   One EPCS-Subscription-Info Attribute MAY be included in an Access-
+   Accept packet and its presence indicates the authenticated user is
+   authorized to receive priority service.
+
+   A summary of the EPCS-Subscription-Infon Attribute format is shown in
+   Figure 4.  The fields are transmitted from left to right.
+
+   0                   1                   2                   3
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Type      |  Length       |        Priority-level         |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+            Figure 4: Encoding EPCS-Subscription-Info Attribute
+
+   Type
+
+      TBA2
+
+   Length
+
+      6 octet
+
+   Data Type
+
+      Integer
+
+   Value
+
+      The field is 2 octets, containing a 16-bit unsigned integer that
+      represents whether the priority level associated with the user's
+      subscription.
+
+5.  Security Considerations
+
+   To be completed.
+
+6.  IANA Considerations
+
+   To be completed.
+
+7.  References
+
+7.1.  Normative References
+
+
+
+Gundavelli, et al.        Expires 14 April 2025                 [Page 7]
+
+Internet-Draft                 RADIUS EPCS                  October 2024
+
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/rfc/rfc2119>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
+
+7.2.  Informative References
+
+   [CSRC5-WG8]
+              WG8, C. S. R. A. I. C. V., "PRIORITY SERVICES", March
+              2017, <https://www.fcc.gov/sites/default/files/
+              CSRIC5-WG8-FinalReport031517.pdf>.
+
+   [CSRC8-WG4]
+              COMMUNICATIONS SECURITY, RELIABILITY, AND INTEROPERABILITY
+              COUNCIL VIII WG4, "REPORT ON 911 SERVICE OVER WI-FI",
+              March 2023, <https://www.fcc.gov/sites/default/files/
+              CSRIC8-Report-911overWi-Fi032123.pdf>.
+
+   [FCC]      Federal Communications Comission, "Review of Rules and
+              Requirements For Priority Services", 19 May 2022,
+              <https://docs.fcc.gov/public/attachments/FCC-
+              22-36A1_Rcd.pdf>.
+
+   [RFC2865]  Rigney, C., Willens, S., Rubens, A., and W. Simpson,
+              "Remote Authentication Dial In User Service (RADIUS)",
+              RFC 2865, DOI 10.17487/RFC2865, June 2000,
+              <https://www.rfc-editor.org/rfc/rfc2865>.
+
+Acknowledgements
+
+   The authors would like to thank all the members of the Wireless
+   Boradband Alliance's Mission Critical & Emergency Services (e911)
+   project.
+
+Authors' Addresses
+
+   Sri Gundavelli
+   Cisco Systems
+   170 West Tasman Drive
+   San Jose,  95134
+   United States of America
+   Email: sgundave@cisco.com
+
+
+
+
+
+Gundavelli, et al.        Expires 14 April 2025                 [Page 8]
+
+Internet-Draft                 RADIUS EPCS                  October 2024
+
+
+   Subir Das
+   Peraton Labs
+   United States of America
+   Email: sdas@peratonlabs.com
+
+
+   Mark Grayson
+   Cisco Systems
+   10 New Square Park
+   Feltham
+   TW14 8HA
+   United Kingdom
+   Email: mgrayson@cisco.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gundavelli, et al.        Expires 14 April 2025                 [Page 9]
